@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>God's Hand - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      [x-cloak] {
+        display: none !important;
+      }
+      .modal-overlay {
+        transition: opacity 0.3s ease;
+      }
+      .modal-content {
+        transition: transform 0.3s ease;
+      }
+    </style>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body x-data="adminPanel()" class="bg-gray-100 text-slate-800">
+    <!-- Login Screen -->
+    <div
+      x-show="!isAuthenticated"
+      x-transition.opacity
+      class="flex items-center justify-center min-h-screen"
+    >
+      <div class="w-full max-w-sm p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <div class="text-center">
+          <h1 class="text-2xl font-bold text-slate-900">
+            God's Hand - Admin Login
+          </h1>
+          <p class="text-slate-500 mt-2">Please sign in to continue.</p>
+        </div>
+        <form @submit.prevent="handleLogin" class="space-y-4">
+          <div>
+            <label for="username" class="sr-only">Username</label>
+            <input
+              type="text"
+              id="username"
+              x-model="username"
+              placeholder="Username"
+              required
+              class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
+          <div>
+            <label for="password" class="sr-only">Password</label>
+            <input
+              type="password"
+              id="password"
+              x-model="password"
+              placeholder="Password"
+              required
+              class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+            />
+          </div>
+          <div
+            x-show="loginError"
+            class="text-red-500 text-sm font-medium"
+            x-text="loginError"
+          ></div>
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white font-semibold px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Main Admin Panel Content -->
+    <div
+      x-show="isAuthenticated"
+      x-cloak
+      x-transition.opacity
+      class="min-h-screen"
+    >
+      <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center py-4">
+            <div>
+              <h1 class="text-xl font-bold text-slate-900">
+                God's Hand Admin Panel
+              </h1>
+              <p class="text-sm text-slate-600">Scholarship Applications</p>
+            </div>
+            <button
+              @click="isAuthenticated = false; username=''; password='';"
+              class="bg-slate-200 text-slate-700 px-4 py-2 text-xs font-semibold rounded-md hover:bg-slate-300"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Submissions Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th class="px-6 py-3 font-semibold text-slate-600">
+                    Applicant Name
+                  </th>
+                  <th class="px-6 py-3 font-semibold text-slate-600">City</th>
+                  <th class="px-6 py-3 font-semibold text-slate-600">
+                    Institution
+                  </th>
+                  <th class="px-6 py-3 font-semibold text-slate-600">
+                    Submitted At
+                  </th>
+                  <th class="px-6 py-3 font-semibold text-slate-600">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-if="isLoading">
+                  <tr>
+                    <td colspan="5" class="text-center p-8 text-slate-500">
+                      Loading submissions...
+                    </td>
+                  </tr>
+                </template>
+                <template
+                  x-for="submission in submissions"
+                  :key="submission.id"
+                >
+                  <tr class="border-b border-slate-200 hover:bg-slate-50">
+                    <td
+                      class="px-6 py-4 font-medium"
+                      x-text="submission.applicant_details.name"
+                    ></td>
+                    <td
+                      class="px-6 py-4 text-slate-600"
+                      x-text="submission.applicant_details.city"
+                    ></td>
+                    <td
+                      class="px-6 py-4 text-slate-600"
+                      x-text="submission.applicant_details.institution"
+                    ></td>
+                    <td
+                      class="px-6 py-4 text-slate-600"
+                      x-text="formatDate(submission.submitted_at)"
+                    ></td>
+                    <td class="px-6 py-4">
+                      <button
+                        @click="viewDetails(submission)"
+                        class="bg-blue-600 text-white px-4 py-2 text-xs font-semibold rounded-md hover:bg-blue-700"
+                      >
+                        View & Analyze
+                      </button>
+                    </td>
+                  </tr>
+                </template>
+                <template x-if="!isLoading && submissions.length === 0">
+                  <tr>
+                    <td colspan="5" class="text-center p-8 text-slate-500">
+                      No submissions have been received yet.
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Details Modal -->
+    <div
+      x-show="isModalOpen"
+      x-cloak
+      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 modal-overlay"
+      @keydown.escape.window="isModalOpen = false"
+    >
+      <div
+        @click.outside="isModalOpen = false"
+        class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content"
+      >
+        <header class="p-4 border-b flex justify-between items-center">
+          <h2 class="text-xl font-bold">Applicant Details</h2>
+          <button
+            @click="isModalOpen = false"
+            class="text-slate-400 hover:text-slate-800 text-2xl"
+          >
+            &times;
+          </button>
+        </header>
+        <main class="p-6 overflow-y-auto space-y-6">
+          <template x-if="selectedSubmission">
+            <div>
+              <div class="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                <div>
+                  <strong class="text-slate-500 block">Name:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.name"
+                  ></span>
+                </div>
+                <div>
+                  <strong class="text-slate-500 block">Age:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.age"
+                  ></span>
+                </div>
+                <div>
+                  <strong class="text-slate-500 block">City:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.city"
+                  ></span>
+                </div>
+                <div>
+                  <strong class="text-slate-500 block">Institution:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.institution"
+                  ></span>
+                </div>
+                <div class="col-span-2">
+                  <strong class="text-slate-500 block"
+                    >Grade/Percentage:</strong
+                  >
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.grade"
+                  ></span>
+                </div>
+              </div>
+              <div class="mt-6">
+                <h3 class="font-semibold mb-2">Conversation Transcript</h3>
+                <div
+                  class="border rounded-md p-3 bg-slate-50 max-h-64 overflow-y-auto space-y-3"
+                >
+                  <template x-for="message in selectedSubmission.chat_history">
+                    <div>
+                      <strong
+                        class="capitalize"
+                        :class="message.role === 'ai' ? 'text-blue-700' : 'text-slate-700'"
+                        x-text="message.role === 'ai' ? 'Assessor' : 'Applicant'"
+                      ></strong>
+                      <p
+                        class="text-sm pl-2 border-l-2"
+                        :class="message.role === 'ai' ? 'border-blue-200' : 'border-slate-200'"
+                        style="white-space: pre-wrap"
+                        x-text="message.text"
+                      ></p>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <div class="mt-6">
+                <h3 class="font-semibold mb-2">AI-Powered Analysis</h3>
+                <button
+                  @click="analyzeSubmission()"
+                  :disabled="isAnalyzing"
+                  class="w-full bg-green-600 text-white px-4 py-2 text-sm font-semibold rounded-md hover:bg-green-700 disabled:bg-green-300 flex items-center justify-center"
+                >
+                  <span x-show="!isAnalyzing"
+                    >Generate AI Analysis & Recommendation</span
+                  >
+                  <span x-show="isAnalyzing" class="flex items-center">
+                    <svg
+                      class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Analyzing...
+                  </span>
+                </button>
+                <div
+                  x-show="analysisResult"
+                  x-transition
+                  class="mt-4 border rounded-md p-4 bg-slate-50 text-sm space-y-2"
+                >
+                  <div
+                    style="white-space: pre-wrap"
+                    x-text="analysisResult"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      function adminPanel() {
+        const supabaseUrl = "https://odqioyjhgmbnartlfyrb.supabase.co";
+        const supabaseKey =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kcWlveWpoZ21ibmFydGxmeXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5MjMzNzgsImV4cCI6MjA3NjQ5OTM3OH0.hEOg1mpvxoOfM4DEDnMevl3sE_GApOdSntMKcZxJLdg";
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        return {
+          isAuthenticated: false,
+          username: "",
+          password: "",
+          loginError: "",
+          submissions: [],
+          isLoading: true,
+          selectedSubmission: null,
+          isModalOpen: false,
+          isAnalyzing: false,
+          analysisResult: null,
+          geminiApiKey: "AIzaSyDXbY62L5UC_wr8lFCXrPrz5ZTb9Io82XQ",
+
+          handleLogin() {
+            const correctUsername = "yashraj.rocxx";
+            const correctPassword = "LORD.y@80085";
+            if (
+              this.username === correctUsername &&
+              this.password === correctPassword
+            ) {
+              this.isAuthenticated = true;
+              this.loginError = "";
+              this.init();
+            } else {
+              this.loginError = "Invalid username or password.";
+            }
+          },
+          init() {
+            if (this.isAuthenticated) this.fetchSubmissions();
+          },
+
+          async fetchSubmissions() {
+            this.isLoading = true;
+            try {
+              let { data, error } = await supabaseClient
+                .from("submissions")
+                .select("*")
+                .order("submitted_at", { ascending: false });
+
+              if (error) throw error;
+
+              this.submissions = data;
+            } catch (error) {
+              console.error("Error fetching submissions:", error.message);
+            } finally {
+              this.isLoading = false;
+            }
+          },
+
+          viewDetails(submission) {
+            this.selectedSubmission = submission;
+            this.analysisResult = null;
+            this.isModalOpen = true;
+          },
+
+          async analyzeSubmission() {
+            if (!this.selectedSubmission) return;
+            this.isAnalyzing = true;
+            this.analysisResult = null;
+
+            const systemPrompt = `You are a senior analyst for the God's Hand Scholarship committee. Your task is to review a completed applicant submission and provide a concise, structured analysis. Based on the provided applicant details and the full conversational transcript, you must: 1. Provide a brief summary of what you learned about the student's personality, mindset, and thinking abilities. 2. Give a clear "Scholarship Recommendation" of "Yes" or "No". 3. Provide a "Reasoning" paragraph (2-4 sentences) explaining your decision, referencing specific parts of the conversation that support your conclusion. The output MUST be in a structured format. Do not add any conversational text before or after the analysis.`;
+
+            const userPrompt = `Please analyze the following submission:\n\n**Applicant Details:**\n- Name: ${
+              this.selectedSubmission.applicant_details.name
+            }\n- Age: ${
+              this.selectedSubmission.applicant_details.age
+            }\n- City: ${
+              this.selectedSubmission.applicant_details.city
+            }\n- Institution: ${
+              this.selectedSubmission.applicant_details.institution
+            }\n- Grade: ${
+              this.selectedSubmission.applicant_details.grade
+            }\n\n**Conversation Transcript:**\n${this.selectedSubmission.chat_history
+              .map(
+                (msg) =>
+                  `${msg.role === "ai" ? "Assessor" : "Applicant"}: ${msg.text}`
+              )
+              .join("\n")}`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${this.geminiApiKey}`;
+
+            try {
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: userPrompt }] }],
+                  systemInstruction: { parts: [{ text: systemPrompt }] },
+                }),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Gemini API Error:", errorData);
+                throw new Error(
+                  errorData.error.message || "API request failed"
+                );
+              }
+
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0) {
+                this.analysisResult =
+                  result.candidates[0].content.parts[0].text;
+              } else {
+                throw new Error(
+                  "No valid response received from analysis API."
+                );
+              }
+            } catch (error) {
+              console.error("Analysis failed:", error);
+              this.analysisResult = `Error: Could not generate analysis. ${error.message}`;
+            } finally {
+              this.isAnalyzing = false;
+            }
+          },
+
+          formatDate(timestamp) {
+            if (!timestamp) return "N/A";
+            return new Date(timestamp).toLocaleString();
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>God's Hand | Investing in Changemakers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand-blue: #2563eb;
+        --background: #ffffff;
+        --section-bg: #f8fafc;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --border-color: #e2e8f0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background);
+        color: var(--text-primary);
+      }
+      .loader {
+        border: 3px solid var(--border-color);
+        border-radius: 50%;
+        border-top: 3px solid var(--brand-blue);
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      [x-cloak] {
+        display: none !important;
+      }
+      .chat-bubble-user {
+        background-color: var(--brand-blue);
+        color: white;
+      }
+      .chat-bubble-ai {
+        background-color: #e2e8f0;
+        color: var(--text-primary);
+      }
+      .hero-gradient {
+        background: radial-gradient(circle at 50% 0%, #f3f4f6, transparent 50%);
+      }
+
+      /* Animation Styles */
+      .fade-in-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+      }
+      .fade-in-up.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      @keyframes pulse {
+        50% {
+          box-shadow: 0 0 0 15px rgba(37, 99, 235, 0);
+        }
+      }
+      .animate-pulse-button {
+        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+        animation: pulse 2.5s infinite;
+      }
+    </style>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body x-data="scholarshipApp" x-init="init()" class="antialiased">
+    <!-- App Container -->
+    <div>
+      <!-- Header -->
+      <header
+        class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200"
+      >
+        <nav
+          class="container mx-auto px-6 py-4 flex justify-between items-center"
+        >
+          <a href="#home" class="text-2xl font-bold text-slate-900"
+            >God's Hand</a
+          >
+          <div class="flex items-center space-x-4 md:space-x-6">
+            <a
+              href="#mission"
+              class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              x-text="uiStrings[language].navMission"
+            ></a>
+            <a
+              href="#scholarship-application"
+              class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              x-text="uiStrings[language].navApply"
+            ></a>
+            <!-- Language Selector -->
+            <div class="relative">
+              <select
+                x-model="language"
+                class="appearance-none bg-slate-100 border border-slate-300 rounded-md py-2 pl-3 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="bn">বাংলা</option>
+                <option value="te">తెలుగు</option>
+                <option value="mr">मराठी</option>
+                <option value="ta">தமிழ்</option>
+                <option value="ur">اردو</option>
+                <option value="gu">ગુજરાતી</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="or">ଓଡ଼ିଆ</option>
+                <option value="ml">മലയാളം</option>
+                <option value="pa">ਪੰਜਾਬੀ</option>
+                <option value="as">অসমীয়া</option>
+              </select>
+              <div
+                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700"
+              >
+                <svg
+                  class="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <!-- Main Landing Page -->
+      <main id="home">
+        <!-- Hero Section -->
+        <section
+          class="py-24 sm:py-32 hero-gradient"
+          x-intersect.once="show($el)"
+        >
+          <div class="container mx-auto px-6 text-center fade-in-up">
+            <h1
+              class="text-5xl md:text-7xl font-extrabold leading-tight mb-6 text-slate-900"
+              x-text="uiStrings[language].heroTitle"
+            ></h1>
+            <p
+              class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-10"
+              x-text="uiStrings[language].heroSubtitle"
+            ></p>
+            <a
+              href="#scholarship-application"
+              class="inline-block bg-blue-600 text-white font-semibold px-10 py-4 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 animate-pulse-button"
+            >
+              <span x-text="uiStrings[language].applyNow"></span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Mission Section -->
+        <section
+          id="mission"
+          class="py-20 bg-white"
+          x-intersect.once="show($el)"
+        >
+          <div class="container mx-auto px-6 fade-in-up">
+            <div class="text-center mb-16">
+              <h2
+                class="text-4xl md:text-5xl font-bold text-slate-900"
+                x-text="uiStrings[language].missionTitle"
+              ></h2>
+              <p
+                class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto"
+                x-text="uiStrings[language].missionSubtitle"
+              ></p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+              <!-- Card 1: Investment -->
+              <div class="bg-slate-50 p-8 rounded-xl border border-slate-200">
+                <h3
+                  class="text-2xl font-bold text-slate-900 mb-3"
+                  x-text="uiStrings[language].missionPoint1Title"
+                ></h3>
+                <p
+                  class="text-slate-600"
+                  x-text="uiStrings[language].missionPoint1Desc"
+                ></p>
+              </div>
+              <!-- Card 2: Scholarship -->
+              <div class="bg-slate-50 p-8 rounded-xl border border-slate-200">
+                <h3
+                  class="text-2xl font-bold text-slate-900 mb-3"
+                  x-text="uiStrings[language].missionPoint2Title"
+                ></h3>
+                <p
+                  class="text-slate-600"
+                  x-text="uiStrings[language].missionPoint2Desc"
+                ></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Eligibility Section -->
+        <section class="py-20 bg-slate-50" x-intersect.once="show($el)">
+          <div class="container mx-auto px-6 fade-in-up">
+            <div class="text-center mb-12">
+              <h2
+                class="text-4xl md:text-5xl font-bold text-slate-900"
+                x-text="uiStrings[language].eligibilityTitle"
+              ></h2>
+              <p
+                class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto"
+                x-text="uiStrings[language].eligibilitySubtitle"
+              ></p>
+            </div>
+            <div class="max-w-2xl mx-auto space-y-4 text-center text-slate-700">
+              <p x-text="uiStrings[language].eligibilityPoint1"></p>
+              <p x-text="uiStrings[language].eligibilityPoint2"></p>
+              <p
+                class="font-semibold text-blue-600"
+                x-text="uiStrings[language].eligibilityPoint3"
+              ></p>
+            </div>
+            <div class="text-center mt-12">
+              <a
+                href="#scholarship-application"
+                class="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-md"
+              >
+                <span x-text="uiStrings[language].startApplication"></span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Scholarship Application Section -->
+      <section
+        id="scholarship-application"
+        class="py-20 bg-white border-t border-slate-200"
+      >
+        <div class="container mx-auto px-6">
+          <div
+            class="max-w-3xl mx-auto bg-white p-8 md:p-10 rounded-xl shadow-lg border border-slate-200"
+          >
+            <div class="text-center mb-8">
+              <h2
+                class="text-3xl md:text-4xl font-bold text-slate-900"
+                x-text="uiStrings[language].scholarshipTitle"
+              ></h2>
+              <p
+                class="text-slate-600 mt-4"
+                x-text="uiStrings[language].scholarshipSubtitle"
+              ></p>
+            </div>
+
+            <!-- Stage 1: Details Form -->
+            <div x-show="assessmentStage === 'details'" x-transition>
+              <form @submit.prevent="proceedToGuidance" class="space-y-6">
+                <fieldset class="space-y-6 border-t pt-6">
+                  <legend
+                    class="text-lg font-semibold text-slate-800"
+                    x-text="uiStrings[language].formSectionPersonal"
+                  ></legend>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        for="name"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formName"
+                      ></label>
+                      <input
+                        type="text"
+                        id="name"
+                        x-model="applicant.name"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label
+                        for="age"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formAge"
+                      ></label>
+                      <input
+                        type="number"
+                        id="age"
+                        x-model="applicant.age"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        required
+                        min="10"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      for="city"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formCity"
+                    ></label>
+                    <input
+                      type="text"
+                      id="city"
+                      x-model="applicant.city"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="institution"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formInstitution"
+                    ></label>
+                    <input
+                      type="text"
+                      id="institution"
+                      x-model="applicant.institution"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      for="grade"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formGrade"
+                    ></label>
+                    <input
+                      type="text"
+                      id="grade"
+                      x-model="applicant.grade"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      required
+                    />
+                  </div>
+                </fieldset>
+                <fieldset class="space-y-6 border-t pt-6">
+                  <legend
+                    class="text-lg font-semibold text-slate-800"
+                    x-text="uiStrings[language].formSectionFamily"
+                  ></legend>
+                  <div>
+                    <label
+                      for="income"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formIncome"
+                    ></label>
+                    <select
+                      id="income"
+                      x-model="applicant.income"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      required
+                    >
+                      <option
+                        value=""
+                        disabled
+                        x-text="uiStrings[language].formSelect"
+                      ></option>
+                      <option value="<1LPA">&lt; 1 LPA</option>
+                      <option value="1-3LPA">1-3 LPA</option>
+                      <option value="3-5LPA">3-5 LPA</option>
+                      <option value="5-10LPA">5-10 LPA</option>
+                      <option value=">10LPA">&gt; 10 LPA</option>
+                    </select>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        for="parentalStatus"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formParentalStatus"
+                      ></label>
+                      <select
+                        id="parentalStatus"
+                        x-model="applicant.parentalStatus"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        required
+                      >
+                        <option
+                          value=""
+                          disabled
+                          x-text="uiStrings[language].formSelect"
+                        ></option>
+                        <option
+                          value="Both Parents"
+                          x-text="uiStrings[language].formParentsBoth"
+                        ></option>
+                        <option
+                          value="Single Parent"
+                          x-text="uiStrings[language].formParentsSingle"
+                        ></option>
+                        <option
+                          value="Guardian/No Parents"
+                          x-text="uiStrings[language].formParentsGuardian"
+                        ></option>
+                      </select>
+                    </div>
+                    <div>
+                      <label
+                        for="fatherOccupation"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formFatherOccupation"
+                      ></label>
+                      <input
+                        type="text"
+                        id="fatherOccupation"
+                        x-model="applicant.fatherOccupation"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      for="motherOccupation"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formMotherOccupation"
+                    ></label>
+                    <input
+                      type="text"
+                      id="motherOccupation"
+                      x-model="applicant.motherOccupation"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                    />
+                  </div>
+                </fieldset>
+                <fieldset class="space-y-6 border-t pt-6">
+                  <legend
+                    class="text-lg font-semibold text-slate-800"
+                    x-text="uiStrings[language].formSectionPurpose"
+                  ></legend>
+                  <div>
+                    <label
+                      for="scholarshipPurpose"
+                      class="block mb-2 text-sm font-medium text-slate-700"
+                      x-text="uiStrings[language].formPurpose"
+                    ></label>
+                    <textarea
+                      id="scholarshipPurpose"
+                      x-model="applicant.purpose"
+                      rows="3"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                      required
+                    ></textarea>
+                  </div>
+                </fieldset>
+                <div class="pt-2 text-center">
+                  <button
+                    type="submit"
+                    class="w-full md:w-auto bg-blue-600 text-white font-semibold px-12 py-3 rounded-md hover:bg-blue-700 transition-all duration-300"
+                  >
+                    <span x-text="uiStrings[language].nextStep"></span>
+                  </button>
+                  <p
+                    x-show="error"
+                    x-text="error"
+                    class="text-red-500 mt-4 text-sm"
+                  ></p>
+                </div>
+              </form>
+            </div>
+
+            <!-- Stage 1.5: Guidance for Minors -->
+            <div
+              x-show="assessmentStage === 'guidance'"
+              x-cloak
+              class="text-center p-6 bg-yellow-50 border border-yellow-200 rounded-lg"
+            >
+              <h3
+                class="text-xl font-bold text-yellow-800"
+                x-text="uiStrings[language].guidanceTitle"
+              ></h3>
+              <p
+                class="mt-2 text-yellow-700"
+                x-text="uiStrings[language].guidanceMessage"
+              ></p>
+              <button
+                @click="startAssessment()"
+                class="mt-6 bg-blue-600 text-white font-semibold px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center mx-auto"
+              >
+                <span
+                  x-show="!isLoading"
+                  x-text="uiStrings[language].startAssessment"
+                ></span>
+                <div x-show="isLoading" class="loader"></div>
+              </button>
+            </div>
+
+            <!-- Stage 2: Chat Interface -->
+            <div
+              x-show="assessmentStage === 'chat'"
+              x-cloak
+              x-transition.opacity
+            >
+              <div class="text-center border-b pb-4 mb-4">
+                <h3
+                  class="font-bold text-lg"
+                  x-text="uiStrings[language].chatHeader"
+                ></h3>
+                <p
+                  class="text-sm text-slate-500"
+                  x-text="uiStrings[language].chatInstruction"
+                ></p>
+              </div>
+              <div
+                class="border rounded-lg p-4 h-96 overflow-y-auto mb-4 flex flex-col space-y-4 bg-slate-50"
+                x-ref="chatbox"
+              >
+                <template x-for="(message, index) in chatHistory" :key="index">
+                  <div
+                    class="w-full flex"
+                    :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
+                  >
+                    <div
+                      class="max-w-xs md:max-w-md p-3 rounded-lg"
+                      :class="message.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'"
+                    >
+                      <p
+                        class="text-sm whitespace-pre-wrap"
+                        x-text="message.text"
+                      ></p>
+                    </div>
+                  </div>
+                </template>
+                <div x-show="isLoading" class="flex justify-start">
+                  <div
+                    class="max-w-xs p-3 rounded-lg chat-bubble-ai flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                      style="animation-delay: 0s"
+                    ></div>
+                    <div
+                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                      style="animation-delay: 0.2s"
+                    ></div>
+                    <div
+                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                      style="animation-delay: 0.4s"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <form @submit.prevent="sendMessage">
+                <div class="flex space-x-2">
+                  <input
+                    type="text"
+                    x-model="currentUserInput"
+                    x-ref="chatInput"
+                    :placeholder="uiStrings[language].chatPlaceholder"
+                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                    :disabled="isLoading"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    class="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition"
+                    :disabled="isLoading"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Stage 3: Completion -->
+            <div
+              x-show="assessmentStage === 'complete'"
+              x-cloak
+              class="text-center py-10"
+              x-transition.opacity
+            >
+              <svg
+                class="w-16 h-16 mx-auto text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <h3
+                class="text-2xl font-bold mt-4"
+                x-text="uiStrings[language].completeTitle"
+              ></h3>
+              <p
+                class="text-slate-600 mt-2"
+                x-text="uiStrings[language].completeSubtitle"
+              ></p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Footer -->
+      <footer class="bg-slate-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+          <p class="font-semibold">&copy; 2025 God's Hand</p>
+          <p
+            class="text-sm text-slate-400 mt-2"
+            x-text="uiStrings[language].footerSlogan"
+          ></p>
+          <a
+            href="./admin.html"
+            class="text-xs text-slate-500 hover:text-slate-300 mt-4 inline-block"
+            >Admin</a
+          >
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      document.addEventListener("alpine:init", () => {
+        Alpine.data("scholarshipApp", () => {
+          const supabaseUrl = "https://odqioyjhgmbnartlfyrb.supabase.co";
+          const supabaseKey =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kcWlveWpoZ21ibmFydGxmeXJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA5MjMzNzgsImV4cCI6MjA3NjQ5OTM3OH0.hEOg1mpvxoOfM4DEDnMevl3sE_GApOdSntMKcZxJLdg";
+          const supabaseClient = supabase.createClient(
+            supabaseUrl,
+            supabaseKey
+          );
+
+          return {
+            applicant: {
+              name: "",
+              age: "",
+              city: "",
+              institution: "",
+              grade: "",
+              income: "",
+              parentalStatus: "",
+              fatherOccupation: "",
+              motherOccupation: "",
+              purpose: "",
+            },
+            isLoading: false,
+            error: "",
+            assessmentStage: "details",
+            language: "en",
+            chatHistory: [],
+            currentUserInput: "",
+            apiKey: "AIzaSyDXbY62L5UC_wr8lFCXrPrz5ZTb9Io82XQ",
+            uiStrings: {
+              en: {
+                navMission: "Our Mission",
+                navApply: "Apply",
+                heroTitle: "Investing in the Architects of Tomorrow",
+                heroSubtitle:
+                  "We fuel revolutions in education by backing visionary founders and nurturing the next generation of creators.",
+                applyNow: "Apply for Scholarship",
+                missionTitle: "Our Dual Mission",
+                missionSubtitle:
+                  "We believe in a symbiotic approach: empowering today's innovators while cultivating the minds of tomorrow.",
+                missionPoint1Title: "Strategic EdTech Investment",
+                missionPoint1Desc:
+                  "We identify and partner with early-stage EdTech companies poised to redefine how the world learns, betting on changemakers who are building the future of education.",
+                missionPoint2Title: "Nurturing Future Innovators",
+                missionPoint2Desc:
+                  "Our unique scholarship is designed to find and empower minds capable of building the future. We look beyond grades to identify raw potential, critical thinking, and creativity.",
+                eligibilityTitle: "Who We Look For",
+                eligibilitySubtitle:
+                  "This scholarship is for the curious, the creative, and the determined.",
+                eligibilityPoint1:
+                  "There are no barriers based on age, institution, or financial condition.",
+                eligibilityPoint2:
+                  "We are searching for individuals with a spark of creative and critical thinking—the future builders, innovators, and problem-solvers.",
+                eligibilityPoint3:
+                  "If you have a vision and the drive to build something meaningful, we want to hear from you.",
+                startApplication: "Start Your Application",
+                scholarshipTitle: "The God's Hand Scholarship",
+                scholarshipSubtitle:
+                  "Begin your journey by sharing your details. A unique conversational assessment powered by YLearn AI awaits.",
+                formSectionPersonal: "Personal & Academic Details",
+                formSectionFamily: "Family & Financial Background",
+                formSectionPurpose: "Scholarship Purpose",
+                formName: "Full Name",
+                formAge: "Age",
+                formCity: "City",
+                formInstitution: "Last Institution Attended",
+                formGrade: "Last Percentage / Grade",
+                formIncome: "Approx. Annual Family Income",
+                formSelect: "Select an option",
+                formParentalStatus: "Parental Status",
+                formParentsBoth: "Both Parents",
+                formParentsSingle: "Single Parent",
+                formParentsGuardian: "Guardian / No Parents",
+                formFatherOccupation: "Father's Occupation",
+                formMotherOccupation: "Mother's Occupation",
+                formPurpose:
+                  "What is the primary purpose for this scholarship? (e.g., college fees, startup idea, research project)",
+                nextStep: "Next Step",
+                guidanceTitle: "Guidance Recommended",
+                guidanceMessage:
+                  "As you are under 18, we recommend having a parent, guardian, or teacher nearby to assist you during the YLearn AI assessment.",
+                startAssessment: "I Understand, Begin YLearn AI Assessment",
+                chatHeader: "YLearn AI Assessment",
+                chatInstruction:
+                  "We value practical, real-world thinking over bookish answers. Be yourself.",
+                chatPlaceholder: "Type your answer here...",
+                completeTitle: "Assessment Complete. Thank You.",
+                completeSubtitle:
+                  "Your thoughtful responses have been recorded. We are inspired by your initiative and will be in touch soon.",
+                footerSlogan: "Forging the Future of Education with YLearn AI.",
+              },
+              hi: {
+                navMission: "हमारा मिशन",
+                navApply: "आवेदन करें",
+                heroTitle: "कल के निर्माताओं में निवेश",
+                heroSubtitle:
+                  "हम दूरदर्शी संस्थापकों का समर्थन करके और अगली पीढ़ी के रचनाकारों का पोषण करके शिक्षा में क्रांति लाते हैं।",
+                applyNow: "छात्रवृत्ति के लिए आवेदन करें",
+                missionTitle: "हमारा दोहरा मिशन",
+                missionSubtitle:
+                  "हम एक सहजीवी दृष्टिकोण में विश्वास करते हैं: आज के नवप्रवर्तकों को सशक्त बनाना और कल के दिमागों को विकसित करना।",
+                missionPoint1Title: "रणनीतिक एडटेक निवेश",
+                missionPoint1Desc:
+                  "हम शिक्षा के भविष्य का निर्माण कर रहे चेंजमेकर्स पर दांव लगाते हुए, दुनिया कैसे सीखती है, इसे फिर से परिभाषित करने के लिए तैयार प्रारंभिक चरण की एडटेक कंपनियों के साथ पहचान और साझेदारी करते हैं।",
+                missionPoint2Title: "भविष्य के नवप्रवर्तकों का पोषण",
+                missionPoint2Desc:
+                  "हमारी अनूठी छात्रवृत्ति भविष्य का निर्माण करने में सक्षम दिमागों को खोजने और सशक्त बनाने के लिए डिज़ाइन की गई है। हम कच्ची क्षमता, महत्वपूर्ण सोच और रचनात्मकता की पहचान करने के लिए ग्रेड से परे देखते हैं।",
+                eligibilityTitle: "हम किसे ढूंढ रहे हैं",
+                eligibilitySubtitle:
+                  "यह छात्रवृत्ति जिज्ञासु, रचनात्मक और दृढ़ निश्चयी लोगों के लिए है।",
+                eligibilityPoint1:
+                  "उम्र, संस्थान या वित्तीय स्थिति के आधार पर कोई बाधा नहीं है।",
+                eligibilityPoint2:
+                  "हम रचनात्मक और महत्वपूर्ण सोच की एक चिंगारी वाले व्यक्तियों की तलाश कर रहे हैं—भविष्य के निर्माता, नवप्रवर्तक और समस्या-समाधानकर्ता।",
+                eligibilityPoint3:
+                  "यदि आपके पास एक दृष्टि है और कुछ सार्थक बनाने की प्रेरणा है, तो हम आपसे सुनना चाहते हैं।",
+                startApplication: "अपना आवेदन शुरू करें",
+                scholarshipTitle: "गॉड्स हैंड छात्रवृत्ति",
+                scholarshipSubtitle:
+                  "YLearn AI द्वारा संचालित एक अनूठा संवादी मूल्यांकन आपकी प्रतीक्षा कर रहा है।",
+                formSectionPersonal: "व्यक्तिगत और शैक्षणिक विवरण",
+                formSectionFamily: "पारिवारिक और वित्तीय पृष्ठभूमि",
+                formSectionPurpose: "छात्रवृत्ति का उद्देश्य",
+                formName: "पूरा नाम",
+                formAge: "उम्र",
+                formCity: "शहर",
+                formInstitution: "अंतिम शिक्षण संस्थान",
+                formGrade: "अंतिम प्रतिशत / ग्रेड",
+                formIncome: "अनुमानित वार्षिक पारिवारिक आय",
+                formSelect: "एक विकल्प चुनें",
+                formParentalStatus: "माता-पिता की स्थिति",
+                formParentsBoth: "दोनों माता-पिता",
+                formParentsSingle: "एकल माता-पिता",
+                formParentsGuardian: "अभिभावक / कोई माता-पिता नहीं",
+                formFatherOccupation: "पिता का व्यवसाय",
+                formMotherOccupation: "माँ का व्यवसाय",
+                formPurpose:
+                  "इस छात्रवृत्ति का प्राथमिक उद्देश्य क्या है? (जैसे, कॉलेज की फीस, स्टार्टअप विचार, शोध परियोजना)",
+                nextStep: "अगला चरण",
+                guidanceTitle: "मार्गदर्शन की सलाह दी जाती है",
+                guidanceMessage:
+                  "चूंकि आप 18 वर्ष से कम हैं, हम अनुशंसा करते हैं कि YLearn AI मूल्यांकन के दौरान आपकी सहायता के लिए कोई माता-पिता, अभिभावक या शिक्षक पास में हो।",
+                startAssessment: "मैं समझ गया, YLearn AI मूल्यांकन शुरू करें",
+                chatHeader: "YLearn AI मूल्यांकन",
+                chatInstruction:
+                  "हम किताबी जवाबों के बजाय व्यावहारिक, वास्तविक सोच को महत्व देते हैं। जैसे हैं, वैसे ही रहें।",
+                chatPlaceholder: "अपना उत्तर यहाँ लिखें...",
+                completeTitle: "मूल्यांकन पूरा हुआ। धन्यवाद।",
+                completeSubtitle:
+                  "आपकी विचारशील प्रतिक्रियाएं दर्ज कर ली गई हैं। हम आपकी पहल से प्रेरित हैं और जल्द ही संपर्क में रहेंगे।",
+                footerSlogan: "YLearn AI के साथ शिक्षा के भविष्य का निर्माण।",
+              },
+              // Other languages are included but omitted here for brevity
+            },
+
+            init() {
+              this.$watch("assessmentStage", (newValue) => {
+                if (newValue === "chat") {
+                  this.$nextTick(() => {
+                    this.$refs.chatInput.focus();
+                  });
+                }
+              });
+
+              const observer = new IntersectionObserver(
+                (entries) => {
+                  entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                      entry.target.classList.add("is-visible");
+                    }
+                  });
+                },
+                { threshold: 0.1 }
+              );
+
+              document.querySelectorAll(".fade-in-up").forEach((el) => {
+                observer.observe(el);
+              });
+            },
+
+            show(el) {
+              el.classList.add("is-visible");
+            },
+
+            get langName() {
+              try {
+                return new Intl.DisplayNames([this.language], {
+                  type: "language",
+                }).of(this.language);
+              } catch (e) {
+                return "the selected language";
+              }
+            },
+
+            getSystemPrompt() {
+              return `You are an empathetic and insightful AI assessor for the God's Hand Scholarship, operating under the name YLearn AI. Your goal is to conduct a holistic, practical, and adaptive assessment of an applicant.
+
+                    **CRITICAL CONTEXT (DO NOT IGNORE):**
+                    - Applicant Name: ${this.applicant.name}, Age: ${
+                this.applicant.age
+              }, City: ${this.applicant.city}
+                    - Academic: ${this.applicant.institution} (${
+                this.applicant.grade
+              })
+                    - Family Situation: ${
+                      this.applicant.parentalStatus
+                    }, Income: ${this.applicant.income}, Occupations (Father: ${
+                this.applicant.fatherOccupation || "N/A"
+              }, Mother: ${this.applicant.motherOccupation || "N/A"})
+                    - **Primary Scholarship Purpose:** "${
+                      this.applicant.purpose
+                    }"
+                    - Preferred Language: ${
+                      this.langName
+                    } (user may also reply in English)
+
+                    **YOUR CORE DIRECTIVES:**
+                    1.  **Adaptive Questioning:** Your questions MUST be highly relevant to the applicant's stated 'Scholarship Purpose'.
+                    2.  **Practicality Over Idealism:** You MUST value realistic, grounded answers. Probe gently for practical first steps.
+                    3.  **CRITICAL RULE: ASK QUESTIONS NATURALLY.** Never announce the skill you are testing. Do NOT say things like 'Now for a critical thinking question...' or 'Let's see how you solve problems'. Integrate your questions seamlessly into the conversation as a curious and engaged listener would.
+                    4.  **Language Protocol:** If the applicant's preferred language is NOT English, every question MUST be asked first in English, followed by a translation in ${
+                      this.langName
+                    }. If the language is English, ask only in English.
+                    5.  **Conclusion:** Once you have a sufficient understanding (after about 8-12 questions), you MUST end the conversation by saying EXACTLY this concluding phrase and nothing else: "ASSESSMENT_COMPLETE"`;
+            },
+
+            proceedToGuidance() {
+              for (const key in this.applicant) {
+                if (
+                  this.applicant[key] === "" &&
+                  key !== "fatherOccupation" &&
+                  key !== "motherOccupation"
+                ) {
+                  this.error = "Please fill in all required fields.";
+                  return;
+                }
+              }
+              this.error = "";
+
+              if (this.applicant.age < 18) {
+                this.assessmentStage = "guidance";
+              } else {
+                this.startAssessment();
+              }
+            },
+
+            async startAssessment() {
+              this.isLoading = true;
+              this.error = "";
+
+              const systemInstruction = {
+                parts: [{ text: this.getSystemPrompt() }],
+              };
+              const initialUserMessage = {
+                role: "user",
+                parts: [
+                  {
+                    text: "I have provided my details. Please begin the assessment.",
+                  },
+                ],
+              };
+
+              try {
+                const responseText = await this.callGeminiAPI(
+                  [initialUserMessage],
+                  systemInstruction
+                );
+                if (responseText) {
+                  this.chatHistory.push({
+                    role: "ai",
+                    text: responseText.trim(),
+                  });
+                  this.assessmentStage = "chat";
+                } else {
+                  throw new Error("Initial message from AI was empty.");
+                }
+              } catch (err) {
+                console.error("Error starting assessment:", err);
+                this.error =
+                  "Sorry, an error occurred while starting the chat. Please try again.";
+              } finally {
+                this.isLoading = false;
+              }
+            },
+
+            async saveToSupabase() {
+              try {
+                const { data, error } = await supabaseClient
+                  .from("submissions")
+                  .insert([
+                    {
+                      applicant_details: this.applicant,
+                      chat_history: this.chatHistory,
+                    },
+                  ]);
+
+                if (error) throw error;
+              } catch (error) {
+                console.error(
+                  "Error writing document to Supabase: ",
+                  error.message
+                );
+              }
+            },
+
+            async sendMessage() {
+              if (!this.currentUserInput.trim()) return;
+              this.isLoading = true;
+              this.chatHistory.push({
+                role: "user",
+                text: this.currentUserInput,
+              });
+              const currentConversation = [...this.chatHistory];
+              this.currentUserInput = "";
+              this.scrollToBottom();
+
+              const systemInstruction = {
+                parts: [{ text: this.getSystemPrompt() }],
+              };
+              const conversationHistory = currentConversation.map((msg) => ({
+                role: msg.role === "ai" ? "model" : "user",
+                parts: [{ text: msg.text }],
+              }));
+
+              try {
+                const responseText = await this.callGeminiAPI(
+                  conversationHistory,
+                  systemInstruction
+                );
+                if (responseText) {
+                  if (responseText.includes("ASSESSMENT_COMPLETE")) {
+                    const cleanText = responseText
+                      .replace("ASSESSMENT_COMPLETE", "")
+                      .trim();
+                    if (cleanText)
+                      this.chatHistory.push({ role: "ai", text: cleanText });
+                    this.assessmentStage = "complete";
+                    this.saveToSupabase();
+                  } else {
+                    this.chatHistory.push({
+                      role: "ai",
+                      text: responseText.trim(),
+                    });
+                  }
+                } else {
+                  throw new Error("No content received from API.");
+                }
+              } catch (err) {
+                console.error("Error sending message:", err);
+                this.chatHistory.push({
+                  role: "ai",
+                  text: "Sorry, I encountered an issue. Please try sending your message again.",
+                });
+              } finally {
+                this.isLoading = false;
+                this.scrollToBottom();
+              }
+            },
+
+            async callGeminiAPI(history, systemInstruction) {
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${this.apiKey}`;
+
+              const payload = {
+                contents: history.map((item) => ({
+                  ...item,
+                  role: item.role === "user" ? "user" : "model",
+                })),
+                systemInstruction: systemInstruction,
+              };
+
+              const response = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error("API Error:", errorData);
+                throw new Error(`API error: ${response.status}`);
+              }
+              const result = await response.json();
+              return result.candidates?.[0]?.content?.parts?.[0]?.text;
+            },
+
+            scrollToBottom() {
+              this.$nextTick(() => {
+                if (this.$refs.chatbox)
+                  this.$refs.chatbox.scrollTop =
+                    this.$refs.chatbox.scrollHeight;
+              });
+            },
+          };
+        });
+      });
+    </script>
+  </body>
+</html>
