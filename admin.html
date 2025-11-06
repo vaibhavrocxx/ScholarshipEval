@@ -9,6 +9,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Add marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Add Alpine.js (This was accidentally removed) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -22,11 +29,34 @@
       .modal-content {
         transition: transform 0.3s ease;
       }
+      /* Basic Markdown Renderin Styles */
+      .prose-styles p {
+        margin-bottom: 0.5rem;
+      }
+      .prose-styles p:last-child {
+        margin-bottom: 0;
+      }
+      .prose-styles ul,
+      .prose-styles ol {
+        margin-left: 1.5rem;
+        margin-bottom: 0.5rem;
+        list-style: revert;
+      }
+      .prose-styles li {
+        margin-bottom: 0.25rem;
+      }
+      .prose-styles strong,
+      .prose-styles h1,
+      .prose-styles h2,
+      .prose-styles h3,
+      .prose-styles h4 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .prose-styles em {
+        font-style: italic;
+      }
     </style>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-      defer
-    ></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
@@ -192,7 +222,7 @@
     >
       <div
         @click.outside="isModalOpen = false"
-        class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content"
+        class="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col modal-content"
       >
         <header class="p-4 border-b flex justify-between items-center">
           <h2 class="text-xl font-bold">Applicant Details</h2>
@@ -219,6 +249,20 @@
                   <span
                     class="font-medium"
                     x-text="selectedSubmission.applicant_details.age"
+                  ></span>
+                </div>
+                <div>
+                  <strong class="text-slate-500 block">Email:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.email"
+                  ></span>
+                </div>
+                <div>
+                  <strong class="text-slate-500 block">Phone:</strong>
+                  <span
+                    class="font-medium"
+                    x-text="selectedSubmission.applicant_details.phone"
                   ></span>
                 </div>
                 <div>
@@ -257,12 +301,12 @@
                         :class="message.role === 'ai' ? 'text-blue-700' : 'text-slate-700'"
                         x-text="message.role === 'ai' ? 'Assessor' : 'Applicant'"
                       ></strong>
-                      <p
-                        class="text-sm pl-2 border-l-2"
+                      <!-- Use x-html to render markdown -->
+                      <div
+                        class="text-sm pl-2 border-l-2 prose-styles"
                         :class="message.role === 'ai' ? 'border-blue-200' : 'border-slate-200'"
-                        style="white-space: pre-wrap"
-                        x-text="message.text"
-                      ></p>
+                        x-html="renderMarkdown(message.text)"
+                      ></div>
                     </div>
                   </template>
                 </div>
@@ -306,9 +350,10 @@
                   x-transition
                   class="mt-4 border rounded-md p-4 bg-slate-50 text-sm space-y-2"
                 >
+                  <!-- Use x-html to render markdown -->
                   <div
-                    style="white-space: pre-wrap"
-                    x-text="analysisResult"
+                    class="prose-styles"
+                    x-html="renderMarkdown(analysisResult)"
                   ></div>
                 </div>
               </div>
@@ -336,7 +381,13 @@
           isModalOpen: false,
           isAnalyzing: false,
           analysisResult: null,
-          geminiApiKey: "AIzaSyDXbY62L5UC_wr8lFCXrPrz5ZTb9Io82XQ",
+          geminiApiKey: "AIzaSyDrsy9iaa06TOkCisLGV6atzBAhHjrF5ZY",
+
+          // Render text as Markdown
+          renderMarkdown(text) {
+            if (!text) return "";
+            return marked.parse(text, { breaks: true }); // breaks: true adds <br> on newlines
+          },
 
           handleLogin() {
             const correctUsername = "yashraj.rocxx";
@@ -385,12 +436,29 @@
             this.isAnalyzing = true;
             this.analysisResult = null;
 
-            const systemPrompt = `You are a senior analyst for the God's Hand Scholarship committee. Your task is to review a completed applicant submission and provide a concise, structured analysis. Based on the provided applicant details and the full conversational transcript, you must: 1. Provide a brief summary of what you learned about the student's personality, mindset, and thinking abilities. 2. Give a clear "Scholarship Recommendation" of "Yes" or "No". 3. Provide a "Reasoning" paragraph (2-4 sentences) explaining your decision, referencing specific parts of the conversation that support your conclusion. The output MUST be in a structured format. Do not add any conversational text before or after the analysis.`;
+            // Updated system prompt for a rock-solid, structured analysis
+            const systemPrompt = `You are a senior analyst for the God's Hand Scholarship committee (YLearn AI). Your task is to review a completed applicant submission and provide a concise, structured analysis in **Markdown format**.
+
+Based on the provided applicant details and the full conversational transcript, you MUST evaluate the candidate on the following dimensions:
+
+1.  **Problem-Solving & Critical Thinking:** (How did they approach problems? Was their thinking logical? Provide a score 1-10 and brief rationale.)
+2.  **Emotional Intelligence & Empathy (EQ):** (Did they show self-awareness, empathy for others, or collaborative spirit? Score 1-10 and rationale.)
+3.  **Drive & 'Grit':** (Is there evidence of persistence, passion, and overcoming real obstacles? Score 1-10 and rationale.)
+4.  **Clarity of Thought & Communication:** (Was their plan clear, realistic, and well-articulated? Score 1-10 and rationale.)
+
+After scoring, provide:
+* **Overall Summary:** (A brief paragraph on the candidate's character and potential.)
+* **Scholarship Recommendation:** (A clear **"Yes"**, **"No"**, or **"Further Review"**)
+* **Reasoning:** (A 2-4 sentence explanation for your recommendation.)`;
 
             const userPrompt = `Please analyze the following submission:\n\n**Applicant Details:**\n- Name: ${
               this.selectedSubmission.applicant_details.name
             }\n- Age: ${
               this.selectedSubmission.applicant_details.age
+            }\n- Email: ${
+              this.selectedSubmission.applicant_details.email
+            }\n- Phone: ${
+              this.selectedSubmission.applicant_details.phone
             }\n- City: ${
               this.selectedSubmission.applicant_details.city
             }\n- Institution: ${
