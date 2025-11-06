@@ -9,6 +9,13 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <!-- Add marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Add Alpine.js (This was accidentally removed) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      defer
+    ></script>
     <style>
       :root {
         --brand-blue: #2563eb;
@@ -25,6 +32,8 @@
         font-family: "Inter", sans-serif;
         background-color: var(--background);
         color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       .loader {
         border: 3px solid var(--border-color);
@@ -32,6 +41,14 @@
         border-top: 3px solid var(--brand-blue);
         width: 24px;
         height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      .btn-loader {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid #ffffff;
+        width: 20px;
+        height: 20px;
         animation: spin 1s linear infinite;
       }
       @keyframes spin {
@@ -76,39 +93,79 @@
         box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
         animation: pulse 2.5s infinite;
       }
+
+      /* Basic Markdown Renderin Styles */
+      .prose-styles p {
+        margin-bottom: 0.5rem;
+      }
+      .prose-styles p:last-child {
+        margin-bottom: 0;
+      }
+      .prose-styles ul,
+      .prose-styles ol {
+        margin-left: 1.5rem;
+        margin-bottom: 0.5rem;
+        list-style: revert;
+      }
+      .prose-styles li {
+        margin-bottom: 0.25rem;
+      }
+      .prose-styles strong {
+        font-weight: 600;
+      }
+      .prose-styles em {
+        font-style: italic;
+      }
     </style>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
-      defer
-    ></script>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body x-data="scholarshipApp" x-init="init()" class="antialiased">
     <!-- App Container -->
-    <div>
+    <div x-show="assessmentStage === 'landing'">
       <!-- Header -->
       <header
         class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 border-b border-slate-200"
+        x-data="{ open: false }"
       >
         <nav
-          class="container mx-auto px-6 py-4 flex justify-between items-center"
+          class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
         >
-          <a href="#home" class="text-2xl font-bold text-slate-900"
-            >God's Hand</a
+          <!-- Logo -->
+          <a
+            href="#home"
+            class="flex items-center space-x-2 text-2xl font-bold text-slate-900"
           >
-          <div class="flex items-center space-x-4 md:space-x-6">
+            <svg
+              class="w-8 h-8 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+              />
+            </svg>
+
+            <span>God's Hand</span>
+          </a>
+
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-6">
             <a
               href="#mission"
               class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
               x-text="uiStrings[language].navMission"
             ></a>
             <a
-              href="#scholarship-application"
+              href="#eligibility"
               class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
-              x-text="uiStrings[language].navApply"
+              x-text="uiStrings[language].eligibilityTitle"
             ></a>
-            <!-- Language Selector -->
             <div class="relative">
               <select
                 x-model="language"
@@ -116,17 +173,7 @@
               >
                 <option value="en">English</option>
                 <option value="hi">हिन्दी</option>
-                <option value="bn">বাংলা</option>
-                <option value="te">తెలుగు</option>
-                <option value="mr">मराठी</option>
-                <option value="ta">தமிழ்</option>
-                <option value="ur">اردو</option>
-                <option value="gu">ગુજરાતી</option>
-                <option value="kn">ಕನ್ನಡ</option>
-                <option value="or">ଓଡ଼ିଆ</option>
-                <option value="ml">മലയാളം</option>
-                <option value="pa">ਪੰਜਾਬੀ</option>
-                <option value="as">অসমীয়া</option>
+                <option value="hi-en">Hinglish (EN+HI)</option>
               </select>
               <div
                 class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700"
@@ -142,8 +189,94 @@
                 </svg>
               </div>
             </div>
+            <a
+              href="#scholarship-application"
+              class="text-sm font-semibold bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              x-text="uiStrings[language].navApply"
+            ></a>
+          </div>
+
+          <!-- Mobile Burger Menu Button -->
+          <div class="md:hidden flex items-center space-x-2">
+            <div class="relative">
+              <select
+                x-model="language"
+                class="appearance-none bg-slate-100 border border-slate-300 rounded-md py-2 pl-3 pr-8 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="en">English</option>
+                <option value="hi">हिन्दी</option>
+                <option value="hi-en">Hinglish (EN+HI)</option>
+              </select>
+              <div
+                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700"
+              >
+                <svg
+                  class="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <button
+              @click="open = !open"
+              class="text-slate-700 p-2 rounded-md hover:bg-slate-100"
+              aria-label="Toggle Menu"
+            >
+              <svg
+                class="w-6 h-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                />
+              </svg>
+            </button>
           </div>
         </nav>
+
+        <!-- Mobile Menu -->
+        <div
+          x-show="open"
+          @click.outside="open = false"
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0 translate-y-1"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="transition ease-in duration-150"
+          x-transition:leave-start="opacity-100 translate-y-0"
+          x-transition:leave-end="opacity-0 translate-y-1"
+          class="md:hidden absolute top-full left-0 w-full bg-white shadow-lg z-40 border-t border-slate-200"
+        >
+          <div class="flex flex-col space-y-2 p-4">
+            <a
+              href="#mission"
+              @click="open = false"
+              class="block text-base font-medium text-slate-600 hover:text-blue-600 p-2 rounded-md hover:bg-slate-50"
+              x-text="uiStrings[language].navMission"
+            ></a>
+            <a
+              href="#eligibility"
+              @click="open = false"
+              class="block text-base font-medium text-slate-600 hover:text-blue-600 p-2 rounded-md hover:bg-slate-50"
+              x-text="uiStrings[language].eligibilityTitle"
+            ></a>
+            <a
+              href="#scholarship-application"
+              @click="open = false"
+              class="block text-base font-semibold bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 text-center transition-colors"
+              x-text="uiStrings[language].navApply"
+            ></a>
+          </div>
+        </div>
       </header>
 
       <!-- Main Landing Page -->
@@ -178,57 +311,110 @@
           x-intersect.once="show($el)"
         >
           <div class="container mx-auto px-6 fade-in-up">
-            <div class="text-center mb-16">
+            <div class="text-center mb-16 max-w-3xl mx-auto">
+              <span
+                class="text-blue-600 font-semibold uppercase tracking-wider"
+                x-text="uiStrings[language].missionTag"
+              ></span>
               <h2
-                class="text-4xl md:text-5xl font-bold text-slate-900"
+                class="text-4xl md:text-5xl font-bold text-slate-900 mt-3"
                 x-text="uiStrings[language].missionTitle"
               ></h2>
               <p
-                class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto"
+                class="mt-4 text-lg text-slate-600"
                 x-text="uiStrings[language].missionSubtitle"
               ></p>
             </div>
-            <div class="grid md:grid-cols-2 gap-10 max-w-4xl mx-auto">
+            <div
+              class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-start"
+            >
               <!-- Card 1: Investment -->
-              <div class="bg-slate-50 p-8 rounded-xl border border-slate-200">
-                <h3
-                  class="text-2xl font-bold text-slate-900 mb-3"
-                  x-text="uiStrings[language].missionPoint1Title"
-                ></h3>
-                <p
-                  class="text-slate-600"
-                  x-text="uiStrings[language].missionPoint1Desc"
-                ></p>
+              <div
+                class="bg-slate-50 p-8 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6"
+              >
+                <div
+                  class="flex-shrink-0 w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="w-6 h-6"
+                  >
+                    <path
+                      d="M10.5 18.75a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z"
+                    />
+                    <path
+                      fill-rule="evenodd"
+                      d="M8.625.75A3.375 3.375 0 005.25 4.125v15.75a3.375 3.375 0 003.375 3.375h6.75a3.375 3.375 0 003.375-3.375V4.125A3.375 3.375 0 0015.375.75h-6.75zM7.5 4.125C7.5 3.504 8.004 3 8.625 3H12v10.5H7.5V4.125zm7.5 10.5H12V3h3.375c.621 0 1.125.504 1.125 1.125v10.5z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3
+                    class="text-2xl font-bold text-slate-900 mb-3"
+                    x-text="uiStrings[language].missionPoint1Title"
+                  ></h3>
+                  <p
+                    class="text-slate-600"
+                    x-text="uiStrings[language].missionPoint1Desc"
+                  ></p>
+                </div>
               </div>
               <!-- Card 2: Scholarship -->
-              <div class="bg-slate-50 p-8 rounded-xl border border-slate-200">
-                <h3
-                  class="text-2xl font-bold text-slate-900 mb-3"
-                  x-text="uiStrings[language].missionPoint2Title"
-                ></h3>
-                <p
-                  class="text-slate-600"
-                  x-text="uiStrings[language].missionPoint2Desc"
-                ></p>
+              <div
+                class="bg-slate-50 p-8 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6"
+              >
+                <div
+                  class="flex-shrink-0 w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    class="w-6 h-6"
+                  >
+                    <path
+                      d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0121.75 6.75v9.1c0 3.801-3.41 6.811-7.98 8.047a.75.75 0 01-.54 0c-4.57-1.236-7.98-4.246-7.98-8.047v-9.1c0-2.348 6.06-5.25 9.45-5.945zM12 6a.75.75 0 01.75.75v3.75h3.75a.75.75 0 010 1.5h-3.75v3.75a.75.75 0 01-1.5 0v-3.75H7.5a.75.75 0 010-1.5h3.75V6.75A.75.75 0 0112 6z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3
+                    class="text-2xl font-bold text-slate-900 mb-3"
+                    x-text="uiStrings[language].missionPoint2Title"
+                  ></h3>
+                  <p
+                    class="text-slate-600"
+                    x-text="uiStrings[language].missionPoint2Desc"
+                  ></p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         <!-- Eligibility Section -->
-        <section class="py-20 bg-slate-50" x-intersect.once="show($el)">
+        <section
+          id="eligibility"
+          class="py-20 bg-slate-50"
+          x-intersect.once="show($el)"
+        >
           <div class="container mx-auto px-6 fade-in-up">
-            <div class="text-center mb-12">
+            <div class="text-center mb-12 max-w-3xl mx-auto">
               <h2
                 class="text-4xl md:text-5xl font-bold text-slate-900"
                 x-text="uiStrings[language].eligibilityTitle"
               ></h2>
               <p
-                class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto"
+                class="mt-4 text-lg text-slate-600"
                 x-text="uiStrings[language].eligibilitySubtitle"
               ></p>
             </div>
-            <div class="max-w-2xl mx-auto space-y-4 text-center text-slate-700">
+            <div
+              class="max-w-3xl mx-auto space-y-6 text-center text-lg text-slate-700"
+            >
               <p x-text="uiStrings[language].eligibilityPoint1"></p>
               <p x-text="uiStrings[language].eligibilityPoint2"></p>
               <p
@@ -246,150 +432,154 @@
             </div>
           </div>
         </section>
-      </main>
 
-      <!-- Scholarship Application Section -->
-      <section
-        id="scholarship-application"
-        class="py-20 bg-white border-t border-slate-200"
-      >
-        <div class="container mx-auto px-6">
-          <div
-            class="max-w-3xl mx-auto bg-white p-8 md:p-10 rounded-xl shadow-lg border border-slate-200"
-          >
-            <div class="text-center mb-8">
-              <h2
-                class="text-3xl md:text-4xl font-bold text-slate-900"
-                x-text="uiStrings[language].scholarshipTitle"
-              ></h2>
-              <p
-                class="text-slate-600 mt-4"
-                x-text="uiStrings[language].scholarshipSubtitle"
-              ></p>
-            </div>
+        <!-- Scholarship Application Section -->
+        <section
+          id="scholarship-application"
+          class="py-20 bg-white border-t border-slate-200"
+        >
+          <div class="container mx-auto px-6">
+            <div
+              class="max-w-3xl mx-auto bg-white p-6 md:p-10 rounded-xl shadow-lg border border-slate-200"
+            >
+              <div class="text-center mb-8">
+                <h2
+                  class="text-3xl md:text-4xl font-bold text-slate-900"
+                  x-text="uiStrings[language].scholarshipTitle"
+                ></h2>
+                <p
+                  class="text-slate-600 mt-4"
+                  x-text="uiStrings[language].scholarshipSubtitle"
+                ></p>
+              </div>
 
-            <!-- Stage 1: Details Form -->
-            <div x-show="assessmentStage === 'details'" x-transition>
-              <form @submit.prevent="proceedToGuidance" class="space-y-6">
-                <fieldset class="space-y-6 border-t pt-6">
-                  <legend
-                    class="text-lg font-semibold text-slate-800"
-                    x-text="uiStrings[language].formSectionPersonal"
-                  ></legend>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Stage 1: Details Form -->
+              <div x-transition>
+                <form @submit.prevent="proceedToGuidance" class="space-y-6">
+                  <fieldset class="space-y-6 border-t pt-6">
+                    <legend
+                      class="text-lg font-semibold text-slate-800"
+                      x-text="uiStrings[language].formSectionPersonal"
+                    ></legend>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          for="name"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formName"
+                        ></label>
+                        <input
+                          type="text"
+                          id="name"
+                          x-model="applicant.name"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="age"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formAge"
+                        ></label>
+                        <input
+                          type="number"
+                          id="age"
+                          x-model="applicant.age"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                          required
+                          min="10"
+                          max="100"
+                        />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          for="email"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formEmail"
+                        ></label>
+                        <input
+                          type="email"
+                          id="email"
+                          x-model="applicant.email"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="phone"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formPhone"
+                        ></label>
+                        <input
+                          type="tel"
+                          id="phone"
+                          x-model="applicant.phone"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                          required
+                        />
+                      </div>
+                    </div>
                     <div>
                       <label
-                        for="name"
+                        for="city"
                         class="block mb-2 text-sm font-medium text-slate-700"
-                        x-text="uiStrings[language].formName"
+                        x-text="uiStrings[language].formCity"
                       ></label>
                       <input
                         type="text"
-                        id="name"
-                        x-model="applicant.name"
+                        id="city"
+                        x-model="applicant.city"
                         class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
                         required
                       />
                     </div>
                     <div>
                       <label
-                        for="age"
+                        for="institution"
                         class="block mb-2 text-sm font-medium text-slate-700"
-                        x-text="uiStrings[language].formAge"
+                        x-text="uiStrings[language].formInstitution"
                       ></label>
                       <input
-                        type="number"
-                        id="age"
-                        x-model="applicant.age"
+                        type="text"
+                        id="institution"
+                        x-model="applicant.institution"
                         class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
                         required
-                        min="10"
-                        max="100"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label
-                      for="city"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formCity"
-                    ></label>
-                    <input
-                      type="text"
-                      id="city"
-                      x-model="applicant.city"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="institution"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formInstitution"
-                    ></label>
-                    <input
-                      type="text"
-                      id="institution"
-                      x-model="applicant.institution"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label
-                      for="grade"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formGrade"
-                    ></label>
-                    <input
-                      type="text"
-                      id="grade"
-                      x-model="applicant.grade"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
-                    />
-                  </div>
-                </fieldset>
-                <fieldset class="space-y-6 border-t pt-6">
-                  <legend
-                    class="text-lg font-semibold text-slate-800"
-                    x-text="uiStrings[language].formSectionFamily"
-                  ></legend>
-                  <div>
-                    <label
-                      for="income"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formIncome"
-                    ></label>
-                    <select
-                      id="income"
-                      x-model="applicant.income"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
-                    >
-                      <option
-                        value=""
-                        disabled
-                        x-text="uiStrings[language].formSelect"
-                      ></option>
-                      <option value="<1LPA">&lt; 1 LPA</option>
-                      <option value="1-3LPA">1-3 LPA</option>
-                      <option value="3-5LPA">3-5 LPA</option>
-                      <option value="5-10LPA">5-10 LPA</option>
-                      <option value=">10LPA">&gt; 10 LPA</option>
-                    </select>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label
-                        for="parentalStatus"
+                        for="grade"
                         class="block mb-2 text-sm font-medium text-slate-700"
-                        x-text="uiStrings[language].formParentalStatus"
+                        x-text="uiStrings[language].formGrade"
+                      ></label>
+                      <input
+                        type="text"
+                        id="grade"
+                        x-model="applicant.grade"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        required
+                      />
+                    </div>
+                  </fieldset>
+                  <fieldset class="space-y-6 border-t pt-6">
+                    <legend
+                      class="text-lg font-semibold text-slate-800"
+                      x-text="uiStrings[language].formSectionFamily"
+                    ></legend>
+                    <div>
+                      <label
+                        for="income"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formIncome"
                       ></label>
                       <select
-                        id="parentalStatus"
-                        x-model="applicant.parentalStatus"
+                        id="income"
+                        x-model="applicant.income"
                         class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
                         required
                       >
@@ -398,229 +588,117 @@
                           disabled
                           x-text="uiStrings[language].formSelect"
                         ></option>
-                        <option
-                          value="Both Parents"
-                          x-text="uiStrings[language].formParentsBoth"
-                        ></option>
-                        <option
-                          value="Single Parent"
-                          x-text="uiStrings[language].formParentsSingle"
-                        ></option>
-                        <option
-                          value="Guardian/No Parents"
-                          x-text="uiStrings[language].formParentsGuardian"
-                        ></option>
+                        <option value="<1LPA">&lt; 1 LPA</option>
+                        <option value="1-3LPA">1-3 LPA</option>
+                        <option value="3-5LPA">3-5 LPA</option>
+                        <option value="5-10LPA">5-10 LPA</option>
+                        <option value=">10LPA">&gt; 10 LPA</option>
                       </select>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label
+                          for="parentalStatus"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formParentalStatus"
+                        ></label>
+                        <select
+                          id="parentalStatus"
+                          x-model="applicant.parentalStatus"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                          required
+                        >
+                          <option
+                            value=""
+                            disabled
+                            x-text="uiStrings[language].formSelect"
+                          ></option>
+                          <option
+                            value="Both Parents"
+                            x-text="uiStrings[language].formParentsBoth"
+                          ></option>
+                          <option
+                            value="Single Parent"
+                            x-text="uiStrings[language].formParentsSingle"
+                          ></option>
+                          <option
+                            value="Guardian/No Parents"
+                            x-text="uiStrings[language].formParentsGuardian"
+                          ></option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          for="fatherOccupation"
+                          class="block mb-2 text-sm font-medium text-slate-700"
+                          x-text="uiStrings[language].formFatherOccupation"
+                        ></label>
+                        <input
+                          type="text"
+                          id="fatherOccupation"
+                          x-model="applicant.fatherOccupation"
+                          class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        />
+                      </div>
                     </div>
                     <div>
                       <label
-                        for="fatherOccupation"
+                        for="motherOccupation"
                         class="block mb-2 text-sm font-medium text-slate-700"
-                        x-text="uiStrings[language].formFatherOccupation"
+                        x-text="uiStrings[language].formMotherOccupation"
                       ></label>
                       <input
                         type="text"
-                        id="fatherOccupation"
-                        x-model="applicant.fatherOccupation"
+                        id="motherOccupation"
+                        x-model="applicant.motherOccupation"
                         class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label
-                      for="motherOccupation"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formMotherOccupation"
-                    ></label>
-                    <input
-                      type="text"
-                      id="motherOccupation"
-                      x-model="applicant.motherOccupation"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                    />
-                  </div>
-                </fieldset>
-                <fieldset class="space-y-6 border-t pt-6">
-                  <legend
-                    class="text-lg font-semibold text-slate-800"
-                    x-text="uiStrings[language].formSectionPurpose"
-                  ></legend>
-                  <div>
-                    <label
-                      for="scholarshipPurpose"
-                      class="block mb-2 text-sm font-medium text-slate-700"
-                      x-text="uiStrings[language].formPurpose"
-                    ></label>
-                    <textarea
-                      id="scholarshipPurpose"
-                      x-model="applicant.purpose"
-                      rows="3"
-                      class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                      required
-                    ></textarea>
-                  </div>
-                </fieldset>
-                <div class="pt-2 text-center">
-                  <button
-                    type="submit"
-                    class="w-full md:w-auto bg-blue-600 text-white font-semibold px-12 py-3 rounded-md hover:bg-blue-700 transition-all duration-300"
-                  >
-                    <span x-text="uiStrings[language].nextStep"></span>
-                  </button>
-                  <p
-                    x-show="error"
-                    x-text="error"
-                    class="text-red-500 mt-4 text-sm"
-                  ></p>
-                </div>
-              </form>
-            </div>
-
-            <!-- Stage 1.5: Guidance for Minors -->
-            <div
-              x-show="assessmentStage === 'guidance'"
-              x-cloak
-              class="text-center p-6 bg-yellow-50 border border-yellow-200 rounded-lg"
-            >
-              <h3
-                class="text-xl font-bold text-yellow-800"
-                x-text="uiStrings[language].guidanceTitle"
-              ></h3>
-              <p
-                class="mt-2 text-yellow-700"
-                x-text="uiStrings[language].guidanceMessage"
-              ></p>
-              <button
-                @click="startAssessment()"
-                class="mt-6 bg-blue-600 text-white font-semibold px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center mx-auto"
-              >
-                <span
-                  x-show="!isLoading"
-                  x-text="uiStrings[language].startAssessment"
-                ></span>
-                <div x-show="isLoading" class="loader"></div>
-              </button>
-            </div>
-
-            <!-- Stage 2: Chat Interface -->
-            <div
-              x-show="assessmentStage === 'chat'"
-              x-cloak
-              x-transition.opacity
-            >
-              <div class="text-center border-b pb-4 mb-4">
-                <h3
-                  class="font-bold text-lg"
-                  x-text="uiStrings[language].chatHeader"
-                ></h3>
-                <p
-                  class="text-sm text-slate-500"
-                  x-text="uiStrings[language].chatInstruction"
-                ></p>
-              </div>
-              <div
-                class="border rounded-lg p-4 h-96 overflow-y-auto mb-4 flex flex-col space-y-4 bg-slate-50"
-                x-ref="chatbox"
-              >
-                <template x-for="(message, index) in chatHistory" :key="index">
-                  <div
-                    class="w-full flex"
-                    :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
-                  >
-                    <div
-                      class="max-w-xs md:max-w-md p-3 rounded-lg"
-                      :class="message.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'"
-                    >
-                      <p
-                        class="text-sm whitespace-pre-wrap"
-                        x-text="message.text"
-                      ></p>
+                  </fieldset>
+                  <fieldset class="space-y-6 border-t pt-6">
+                    <legend
+                      class="text-lg font-semibold text-slate-800"
+                      x-text="uiStrings[language].formSectionPurpose"
+                    ></legend>
+                    <div>
+                      <label
+                        for="scholarshipPurpose"
+                        class="block mb-2 text-sm font-medium text-slate-700"
+                        x-text="uiStrings[language].formPurpose"
+                      ></label>
+                      <textarea
+                        id="scholarshipPurpose"
+                        x-model="applicant.purpose"
+                        rows="3"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                        required
+                      ></textarea>
                     </div>
-                  </div>
-                </template>
-                <div x-show="isLoading" class="flex justify-start">
-                  <div
-                    class="max-w-xs p-3 rounded-lg chat-bubble-ai flex items-center space-x-2"
-                  >
-                    <div
-                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
-                      style="animation-delay: 0s"
-                    ></div>
-                    <div
-                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
-                      style="animation-delay: 0.2s"
-                    ></div>
-                    <div
-                      class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
-                      style="animation-delay: 0.4s"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              <form @submit.prevent="sendMessage">
-                <div class="flex space-x-2">
-                  <input
-                    type="text"
-                    x-model="currentUserInput"
-                    x-ref="chatInput"
-                    :placeholder="uiStrings[language].chatPlaceholder"
-                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
-                    :disabled="isLoading"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    class="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition"
-                    :disabled="isLoading"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+                  </fieldset>
+                  <div class="pt-2 text-center">
+                    <button
+                      type="submit"
+                      :disabled="isLoading"
+                      class="w-full md:w-auto bg-blue-600 text-white font-semibold px-12 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center min-h-[48px] disabled:bg-blue-400 disabled:cursor-not-allowed"
                     >
-                      <path
-                        d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Stage 3: Completion -->
-            <div
-              x-show="assessmentStage === 'complete'"
-              x-cloak
-              class="text-center py-10"
-              x-transition.opacity
-            >
-              <svg
-                class="w-16 h-16 mx-auto text-green-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <h3
-                class="text-2xl font-bold mt-4"
-                x-text="uiStrings[language].completeTitle"
-              ></h3>
-              <p
-                class="text-slate-600 mt-2"
-                x-text="uiStrings[language].completeSubtitle"
-              ></p>
+                      <span
+                        x-show="!isLoading"
+                        x-text="uiStrings[language].nextStep"
+                      ></span>
+                      <div x-show="isLoading" class="btn-loader"></div>
+                    </button>
+                    <p
+                      x-show="error"
+                      x-text="error"
+                      class="text-red-500 mt-4 text-sm"
+                    ></p>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
       <!-- Footer -->
       <footer class="bg-slate-800 text-white py-8">
         <div class="container mx-auto px-6 text-center">
@@ -631,11 +709,188 @@
           ></p>
           <a
             href="./admin.html"
+            target="_blank"
             class="text-xs text-slate-500 hover:text-slate-300 mt-4 inline-block"
-            >Admin</a
+            >Admin Panel</a
           >
         </div>
       </footer>
+    </div>
+
+    <!-- 
+      Assessment Full-Screen Modal 
+      This will cover the whole screen for Guidance, Chat, and Completion stages
+    -->
+    <div
+      x-show="assessmentStage !== 'landing'"
+      x-cloak
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      class="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center p-4"
+    >
+      <div class="w-full h-full flex flex-col">
+        <!-- Stage 1.5: Guidance for Minors -->
+        <div
+          x-show="assessmentStage === 'guidance'"
+          class="flex flex-col items-center justify-center text-center p-6 h-full"
+        >
+          <div
+            class="p-8 bg-yellow-50 border border-yellow-200 rounded-lg max-w-lg"
+          >
+            <h3
+              class="text-2xl font-bold text-yellow-800"
+              x-text="uiStrings[language].guidanceTitle"
+            ></h3>
+            <p
+              class="mt-4 text-yellow-700"
+              x-text="uiStrings[language].guidanceMessage"
+            ></p>
+            <button
+              @click="startAssessment()"
+              class="mt-8 bg-blue-600 text-white font-semibold px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center mx-auto min-h-[48px]"
+            >
+              <span
+                x-show="!isLoading"
+                x-text="uiStrings[language].startAssessment"
+              ></span>
+              <div x-show="isLoading" class="btn-loader"></div>
+            </button>
+            <p
+              x-show="error"
+              x-text="error"
+              class="text-red-500 mt-4 text-sm"
+            ></p>
+          </div>
+        </div>
+
+        <!-- Stage 2: Chat Interface -->
+        <div
+          x-show="assessmentStage === 'chat'"
+          x-cloak
+          class="w-full max-w-3xl mx-auto h-full flex flex-col"
+        >
+          <div class="text-center border-b pb-4 my-4">
+            <h3
+              class="font-bold text-lg"
+              x-text="uiStrings[language].chatHeader"
+            ></h3>
+            <p
+              class="text-sm text-slate-500"
+              x-text="uiStrings[language].chatInstruction"
+            ></p>
+          </div>
+          <div
+            class="flex-1 overflow-y-auto mb-4 p-4 space-y-4"
+            x-ref="chatbox"
+          >
+            <template x-for="(message, index) in chatHistory" :key="index">
+              <div
+                class="w-full flex"
+                :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
+              >
+                <div
+                  class="max-w-xs md:max-w-md p-3 rounded-lg shadow-sm"
+                  :class="message.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'"
+                >
+                  <!-- Use x-html to render markdown -->
+                  <div
+                    class="text-sm prose-styles"
+                    x-html="renderMarkdown(message.text)"
+                  ></div>
+                </div>
+              </div>
+            </template>
+            <div x-show="isLoading" class="flex justify-start">
+              <div
+                class="max-w-xs p-3 rounded-lg chat-bubble-ai flex items-center space-x-2"
+              >
+                <div
+                  class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                  style="animation-delay: 0s"
+                ></div>
+                <div
+                  class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                  style="animation-delay: 0.2s"
+                ></div>
+                <div
+                  class="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+                  style="animation-delay: 0.4s"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <form @submit.prevent="sendMessage" class="pb-4">
+            <div class="flex space-x-2">
+              <input
+                type="text"
+                x-model="currentUserInput"
+                x-ref="chatInput"
+                :placeholder="uiStrings[language].chatPlaceholder"
+                class="w-full px-4 py-3 border border-slate-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition"
+                :disabled="isLoading"
+                required
+              />
+              <button
+                type="submit"
+                class="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition"
+                :disabled="isLoading"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Stage 3: Completion -->
+        <div
+          x-show="assessmentStage === 'complete'"
+          x-cloak
+          class="flex flex-col items-center justify-center text-center h-full"
+          x-transition.opacity
+        >
+          <svg
+            class="w-20 h-20 mx-auto text-green-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <h3
+            class="text-3xl font-bold mt-6"
+            x-text="uiStrings[language].completeTitle"
+          ></h3>
+          <p
+            class="text-slate-600 text-lg mt-3 max-w-md"
+            x-text="uiStrings[language].completeSubtitle"
+          ></p>
+          <button
+            @click="assessmentStage = 'landing'"
+            class="mt-8 text-sm text-blue-600 hover:underline"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -653,6 +908,8 @@
             applicant: {
               name: "",
               age: "",
+              email: "",
+              phone: "",
               city: "",
               institution: "",
               grade: "",
@@ -664,31 +921,32 @@
             },
             isLoading: false,
             error: "",
-            assessmentStage: "details",
+            assessmentStage: "landing", // 'landing', 'guidance', 'chat', 'complete'
             language: "en",
             chatHistory: [],
             currentUserInput: "",
-            apiKey: "AIzaSyDXbY62L5UC_wr8lFCXrPrz5ZTb9Io82XQ",
+            apiKey: "AIzaSyDrsy9iaa06TOkCisLGV6atzBAhHjrF5ZY", // API Key
             uiStrings: {
               en: {
-                navMission: "Our Mission",
-                navApply: "Apply",
-                heroTitle: "Investing in the Architects of Tomorrow",
+                navMission: "Our Approach",
+                navApply: "Apply Now",
+                heroTitle: "Empowering Tomorrow's Changemakers",
                 heroSubtitle:
-                  "We fuel revolutions in education by backing visionary founders and nurturing the next generation of creators.",
+                  "We provide brilliant minds with the resources and mentorship to build a better future. Our mission is to find and fund potential, wherever it exists.",
                 applyNow: "Apply for Scholarship",
-                missionTitle: "Our Dual Mission",
+                missionTag: "Our Approach",
+                missionTitle: "Invest in Talent. Build the Future.",
                 missionSubtitle:
-                  "We believe in a symbiotic approach: empowering today's innovators while cultivating the minds of tomorrow.",
-                missionPoint1Title: "Strategic EdTech Investment",
+                  "We believe in a simple, powerful cycle: invest in today's innovators, and they will build the platforms that educate tomorrow's leaders. We fund both.",
+                missionPoint1Title: "Funding the Future of Learning",
                 missionPoint1Desc:
                   "We identify and partner with early-stage EdTech companies poised to redefine how the world learns, betting on changemakers who are building the future of education.",
-                missionPoint2Title: "Nurturing Future Innovators",
+                missionPoint2Title: "The 'God's Hand' Scholarship",
                 missionPoint2Desc:
                   "Our unique scholarship is designed to find and empower minds capable of building the future. We look beyond grades to identify raw potential, critical thinking, and creativity.",
-                eligibilityTitle: "Who We Look For",
+                eligibilityTitle: "Who Is This For?",
                 eligibilitySubtitle:
-                  "This scholarship is for the curious, the creative, and the determined.",
+                  "This isn't about your grades. It's about your vision.",
                 eligibilityPoint1:
                   "There are no barriers based on age, institution, or financial condition.",
                 eligibilityPoint2:
@@ -698,12 +956,14 @@
                 startApplication: "Start Your Application",
                 scholarshipTitle: "The God's Hand Scholarship",
                 scholarshipSubtitle:
-                  "Begin your journey by sharing your details. A unique conversational assessment powered by YLearn AI awaits.",
+                  "Begin your journey. A unique conversational assessment powered by YLearn AI awaits.",
                 formSectionPersonal: "Personal & Academic Details",
                 formSectionFamily: "Family & Financial Background",
                 formSectionPurpose: "Scholarship Purpose",
                 formName: "Full Name",
                 formAge: "Age",
+                formEmail: "Email Address",
+                formPhone: "Phone Number",
                 formCity: "City",
                 formInstitution: "Last Institution Attended",
                 formGrade: "Last Percentage / Grade",
@@ -729,42 +989,46 @@
                 completeTitle: "Assessment Complete. Thank You.",
                 completeSubtitle:
                   "Your thoughtful responses have been recorded. We are inspired by your initiative and will be in touch soon.",
-                footerSlogan: "Forging the Future of Education with YLearn AI.",
+                footerSlogan:
+                  "Forging the Future of Education. Powered by YLearn AI.",
               },
               hi: {
-                navMission: "हमारा मिशन",
-                navApply: "आवेदन करें",
-                heroTitle: "कल के निर्माताओं में निवेश",
+                navMission: "हमारा दृष्टिकोण",
+                navApply: "अभी आवेदन करें",
+                heroTitle: "कल के चेंजमेकर्स को सशक्त बनाना",
                 heroSubtitle:
-                  "हम दूरदर्शी संस्थापकों का समर्थन करके और अगली पीढ़ी के रचनाकारों का पोषण करके शिक्षा में क्रांति लाते हैं।",
+                  "हम प्रतिभाशाली दिमागों को एक बेहतर भविष्य बनाने के लिए संसाधन और मार्गदर्शन प्रदान करते हैं। हमारा मिशन है क्षमता को खोजना और उसे फंड करना, चाहे वह कहीं भी हो।",
                 applyNow: "छात्रवृत्ति के लिए आवेदन करें",
-                missionTitle: "हमारा दोहरा मिशन",
+                missionTag: "हमारा दृष्टिकोण",
+                missionTitle: "प्रतिभा में निवेश करें। भविष्य का निर्माण करें।",
                 missionSubtitle:
-                  "हम एक सहजीवी दृष्टिकोण में विश्वास करते हैं: आज के नवप्रवर्तकों को सशक्त बनाना और कल के दिमागों को विकसित करना।",
-                missionPoint1Title: "रणनीतिक एडटेक निवेश",
+                  "हम एक सरल, शक्तिशाली चक्र में विश्वास करते हैं: आज के अन्वेषकों में निवेश करें, और वे कल के नेताओं को शिक्षित करने वाले प्लेटफॉर्म का निर्माण करेंगे। हम दोनों को फंड करते हैं।",
+                missionPoint1Title: "सीखने के भविष्य को फंड करना",
                 missionPoint1Desc:
-                  "हम शिक्षा के भविष्य का निर्माण कर रहे चेंजमेकर्स पर दांव लगाते हुए, दुनिया कैसे सीखती है, इसे फिर से परिभाषित करने के लिए तैयार प्रारंभिक चरण की एडटेक कंपनियों के साथ पहचान और साझेदारी करते हैं।",
-                missionPoint2Title: "भविष्य के नवप्रवर्तकों का पोषण",
+                  "हम उन एड-टेक कंपनियों के साथ साझेदारी करते हैं जो दुनिया के सीखने के तरीके को फिर से परिभाषित करने के लिए तैयार हैं, और हम शिक्षा का भविष्य बनाने वाले चेंजमेकर्स पर दांव लगाते हैं।",
+                missionPoint2Title: "'गॉड्स हैंड' छात्रवृत्ति",
                 missionPoint2Desc:
-                  "हमारी अनूठी छात्रवृत्ति भविष्य का निर्माण करने में सक्षम दिमागों को खोजने और सशक्त बनाने के लिए डिज़ाइन की गई है। हम कच्ची क्षमता, महत्वपूर्ण सोच और रचनात्मकता की पहचान करने के लिए ग्रेड से परे देखते हैं।",
-                eligibilityTitle: "हम किसे ढूंढ रहे हैं",
+                  "हमारी अनूठी छात्रवृत्ति भविष्य का निर्माण करने में सक्षम दिमागों को खोजने और सशक्त बनाने के लिए डिज़ाइन की गई है। हम ग्रेड से परे जाकर वास्तविक क्षमता, महत्वपूर्ण सोच और रचनात्मकता की पहचान करते हैं।",
+                eligibilityTitle: "यह किसके लिए है?",
                 eligibilitySubtitle:
-                  "यह छात्रवृत्ति जिज्ञासु, रचनात्मक और दृढ़ निश्चयी लोगों के लिए है।",
+                  "यह आपके ग्रेड के बारे में नहीं है। यह आपके दृष्टिकोण के बारे में है।",
                 eligibilityPoint1:
                   "उम्र, संस्थान या वित्तीय स्थिति के आधार पर कोई बाधा नहीं है।",
                 eligibilityPoint2:
-                  "हम रचनात्मक और महत्वपूर्ण सोच की एक चिंगारी वाले व्यक्तियों की तलाश कर रहे हैं—भविष्य के निर्माता, नवप्रवर्तक और समस्या-समाधानकर्ता।",
+                  "हम रचनात्मक और महत्वपूर्ण सोच की एक चिंगारी वाले व्यक्तियों की तलाश कर रहे हैं—भविष्य के निर्माता, अन्वेषक और समस्या-समाधानकर्ता।",
                 eligibilityPoint3:
                   "यदि आपके पास एक दृष्टि है और कुछ सार्थक बनाने की प्रेरणा है, तो हम आपसे सुनना चाहते हैं।",
                 startApplication: "अपना आवेदन शुरू करें",
                 scholarshipTitle: "गॉड्स हैंड छात्रवृत्ति",
                 scholarshipSubtitle:
-                  "YLearn AI द्वारा संचालित एक अनूठा संवादी मूल्यांकन आपकी प्रतीक्षा कर रहा है।",
+                  "अपनी यात्रा शुरू करें। YLearn AI द्वारा संचालित एक अनूठा संवादी मूल्यांकन आपकी प्रतीक्षा कर रहा है।",
                 formSectionPersonal: "व्यक्तिगत और शैक्षणिक विवरण",
                 formSectionFamily: "पारिवारिक और वित्तीय पृष्ठभूमि",
                 formSectionPurpose: "छात्रवृत्ति का उद्देश्य",
                 formName: "पूरा नाम",
                 formAge: "उम्र",
+                formEmail: "ईमेल पता",
+                formPhone: " फ़ोन नंबर",
                 formCity: "शहर",
                 formInstitution: "अंतिम शिक्षण संस्थान",
                 formGrade: "अंतिम प्रतिशत / ग्रेड",
@@ -790,9 +1054,77 @@
                 completeTitle: "मूल्यांकन पूरा हुआ। धन्यवाद।",
                 completeSubtitle:
                   "आपकी विचारशील प्रतिक्रियाएं दर्ज कर ली गई हैं। हम आपकी पहल से प्रेरित हैं और जल्द ही संपर्क में रहेंगे।",
-                footerSlogan: "YLearn AI के साथ शिक्षा के भविष्य का निर्माण।",
+                footerSlogan:
+                  "शिक्षा के भविष्य का निर्माण। YLearn AI द्वारा संचालित।",
               },
-              // Other languages are included but omitted here for brevity
+              "hi-en": {
+                navMission: "Hamara Approach",
+                navApply: "Abhi Apply Karo",
+                heroTitle: "Kal ke Changemakers ko Empower karna",
+                heroSubtitle:
+                  "Hum brilliant minds ko behtar future banane ke liye resources aur mentorship dete hain. Hamara mission potential ko dhoondhna aur fund karna hai, kahin bhi.",
+                applyNow: "Scholarship ke liye Apply Karo",
+                missionTag: "Hamara Approach",
+                missionTitle: "Talent mein Invest Karo. Future Banao.",
+                missionSubtitle:
+                  "Hum ek simple, powerful cycle mein vishwaas karte hain: aaj ke innovators mein invest karo, aur woh kal ke leaders ko educate karne wale platforms banayenge. Hum dono ko fund karte hain.",
+                missionPoint1Title: "Learning ke Future ko Fund karna",
+                missionPoint1Desc:
+                  "Hum early-stage EdTech companies ko pehchante hain jo duniya ke seekhne ke tareeke ko badal sakti hain, aur un changemakers par bet karte hain jo education ka future bana rahe hain.",
+                missionPoint2Title: "The 'God's Hand' Scholarship",
+                missionPoint2Desc:
+                  "Hamari unique scholarship, future banane wale dimaagon ko dhoondhne aur empower karne ke liye design ki gayi hai. Hum grades se aage badhkar raw potential, critical thinking, aur creativity ko pehchante hain.",
+                eligibilityTitle: "Yeh Kiske Liye Hai?",
+                eligibilitySubtitle:
+                  "Yeh aapke grades ke baare mein nahin hai. Yeh aapke vision ke baare mein hai.",
+                eligibilityPoint1:
+                  "Age, institution, ya financial condition ka koi barrier nahin hai.",
+                eligibilityPoint2:
+                  "Hum un logon ko dhoondh rahe hain jinmein creative aur critical thinking ki chingaari hai—future ke builders, innovators, aur problem-solvers.",
+                eligibilityPoint3:
+                  "Agar aapke paas ek vision hai aur kuch meaningful banane ka drive hai, toh hum aapse sunna chahte hain.",
+                startApplication: "Apna Application Shuru Karo",
+                scholarshipTitle: "The God's Hand Scholarship",
+                scholarshipSubtitle:
+                  "Apna safar shuru karo. YLearn AI dwaara ek unique conversational assessment aapka intezaar kar raha hai.",
+                formSectionPersonal: "Personal & Academic Details",
+                formSectionFamily: "Family & Financial Background",
+                formSectionPurpose: "Scholarship ka Purpose",
+                formName: "Poora Naam",
+                formAge: "Umar (Age)",
+                formEmail: "Email Address",
+                formPhone: "Phone Number",
+                formCity: "Sheher (City)",
+                formInstitution: "Pichla Institution (School/College)",
+                formGrade: "Pichle Percentage / Grade",
+                formIncome: "Parivaar ki saalana Income (lagbhag)",
+                formSelect: "Ek option chuno",
+                formParentalStatus: "Aapke Parents ka Status",
+                formParentsBoth: "Dono Parents",
+                formParentsSingle: "Single Parent",
+                formParentsGuardian: "Guardian / Koi Parent Nahin",
+                formFatherOccupation:
+                  "Pita ka Vyaavasaay (Father's Occupation)",
+                formMotherOccupation:
+                  "Mata ka Vyaavasaay (Mother's Occupation)",
+                formPurpose:
+                  "Is scholarship ka main purpose kya hai? (Jaise: college fees, startup idea, research project)",
+                nextStep: "Agla Kadam (Next Step)",
+                guidanceTitle: "Madad (Guidance) Le Sakté Hain",
+                guidanceMessage:
+                  "Kyunki aap 18 saal se kam hain, hum recommend karte hain ki YLearn AI assessment ke dauraan aapke paas koi parent, guardian, ya teacher ho.",
+                startAssessment:
+                  "Main Samajh Gaya, YLearn AI Assessment Shuru Karein",
+                chatHeader: "YLearn AI Assessment",
+                chatInstruction:
+                  "Hum kitaabi jawaabon se zyada practical, real-world thinking ko value dete hain. Aap jaise ho, waise hi raho.",
+                chatPlaceholder: "Apna jawaab yahan type karo...",
+                completeTitle: "Assessment Poora Hua. Shukriya.",
+                completeSubtitle:
+                  "Aapke jawaab record kar liye gaye hain. Hum aapki pehel se inspire hain aur jald hi aapse contact karenge.",
+                footerSlogan:
+                  "Education ka future bana rahe hain. Powered by YLearn AI.",
+              },
             },
 
             init() {
@@ -804,11 +1136,13 @@
                 }
               });
 
+              // Intersection Observer for fade-in animations
               const observer = new IntersectionObserver(
                 (entries) => {
                   entries.forEach((entry) => {
                     if (entry.isIntersecting) {
                       entry.target.classList.add("is-visible");
+                      observer.unobserve(entry.target);
                     }
                   });
                 },
@@ -820,22 +1154,28 @@
               });
             },
 
+            // Render text as Markdown
+            renderMarkdown(text) {
+              if (!text) return "";
+              return marked.parse(text, { breaks: true }); // breaks: true adds <br> on newlines
+            },
+
             show(el) {
               el.classList.add("is-visible");
             },
 
             get langName() {
-              try {
-                return new Intl.DisplayNames([this.language], {
-                  type: "language",
-                }).of(this.language);
-              } catch (e) {
-                return "the selected language";
-              }
+              const langMap = {
+                en: "English",
+                hi: "Hindi",
+                "hi-en": "Hinglish",
+              };
+              return langMap[this.language] || "English";
             },
 
+            // Updated System Prompt for "Rock Solid" evaluation
             getSystemPrompt() {
-              return `You are an empathetic and insightful AI assessor for the God's Hand Scholarship, operating under the name YLearn AI. Your goal is to conduct a holistic, practical, and adaptive assessment of an applicant.
+              return `You are an expert, empathetic, and insightful AI assessor for the God's Hand Scholarship, operating as YLearn AI. Your goal is to conduct a holistic, practical, and adaptive conversational assessment to identify high-potential candidates.
 
                     **CRITICAL CONTEXT (DO NOT IGNORE):**
                     - Applicant Name: ${this.applicant.name}, Age: ${
@@ -852,37 +1192,64 @@
                     - **Primary Scholarship Purpose:** "${
                       this.applicant.purpose
                     }"
-                    - Preferred Language: ${
-                      this.langName
-                    } (user may also reply in English)
+                    - Preferred Language: ${this.langName}.
+
+                    **CORE EVALUATION FRAMEWORK (Internal Framework):**
+                    Your primary goal is to covertly assess the candidate on these dimensions. NEVER mention these terms. Weave questions naturally into the conversation to find evidence.
+                    1.  **Problem-Solving & Critical Thinking:** How do they approach problems? Can they break down their 'purpose' into logical steps? What obstacles do they foresee?
+                    2.  **Emotional Intelligence & Empathy (EQ):** How self-aware are they? Do they consider others in their plans? Can they describe a time they worked with or for others?
+                    3.  **Drive & 'Grit':** Is there evidence of passion? Have they overcome a past challenge? Are they proactive?
+                    4.  **Clarity of Thought:** How clearly can they articulate their 'purpose' and the *first practical step* they would take? Is their plan realistic?
+                    5.  **Curiosity & Resourcefulness:** What do they do when they don't know an answer? What have they learned on their own recently?
 
                     **YOUR CORE DIRECTIVES:**
-                    1.  **Adaptive Questioning:** Your questions MUST be highly relevant to the applicant's stated 'Scholarship Purpose'.
-                    2.  **Practicality Over Idealism:** You MUST value realistic, grounded answers. Probe gently for practical first steps.
-                    3.  **CRITICAL RULE: ASK QUESTIONS NATURALLY.** Never announce the skill you are testing. Do NOT say things like 'Now for a critical thinking question...' or 'Let's see how you solve problems'. Integrate your questions seamlessly into the conversation as a curious and engaged listener would.
-                    4.  **Language Protocol:** If the applicant's preferred language is NOT English, every question MUST be asked first in English, followed by a translation in ${
-                      this.langName
-                    }. If the language is English, ask only in English.
-                    5.  **Conclusion:** Once you have a sufficient understanding (after about 8-12 questions), you MUST end the conversation by saying EXACTLY this concluding phrase and nothing else: "ASSESSMENT_COMPLETE"`;
+                    1.  **First Message:** Your first message MUST be a warm, natural greeting. Acknowledge the applicant by name, but DO NOT list all their details back to them. Your goal is to make them feel comfortable. Then, ask your very first question, which should be directly related to their 'Primary Scholarship Purpose'.
+                        * **Good First Message (DO THIS):** "Hello ${
+                          this.applicant.name
+                        }, it's great to meet you. I'm here to learn a bit more about you and your passion for **${
+                this.applicant.purpose
+              }**. To get started, could you tell me a little bit about what first sparked your interest in that?"
+                    2.  **Language Protocol:**
+                        * If Preferred Language is 'Hindi': Ask questions in Hindi.
+                        * If Preferred Language is 'Hinglish': You MUST respond in a natural, conversational mix of Hindi and English (e.g., "Toh, ${
+                          this.applicant.name
+                        }, aapka main purpose hai '${
+                this.applicant.purpose
+              }'. Iske baare mein thoda aur batao?"). Explicitly tell them they can also reply in English, Hindi, or a mix.
+                        * If Preferred Language is 'English': Ask only in English.
+                    3.  **Be Adaptive:** Your questions MUST be highly relevant to their previous answer. This is a conversation, not a checklist.
+                    4.  **Practicality Over Idealism:** You MUST value realistic, grounded answers. Probe gently for *practical first steps*.
+                    5.  **CRITICAL RULE: NO ROBOTIC QUESTIONS.** Never announce the skill you are testing. Do NOT say "Here is a critical thinking question." Integrate your questions seamlessly.
+                    6.  **Use Markdown:** Use Markdown (like **bold** or *italics*) sparingly to emphasize key words.
+                    7.  **Conclusion:** Once you have a sufficient understanding (after about 8-12 questions), you MUST end the conversation by saying EXACTLY this concluding phrase and nothing else: "ASSESSMENT_COMPLETE"`;
             },
 
             proceedToGuidance() {
-              for (const key in this.applicant) {
-                if (
-                  this.applicant[key] === "" &&
-                  key !== "fatherOccupation" &&
-                  key !== "motherOccupation"
-                ) {
+              this.error = "";
+              // Validate all required fields *except* optional ones
+              const requiredKeys = [
+                "name",
+                "age",
+                "email",
+                "phone",
+                "city",
+                "institution",
+                "grade",
+                "income",
+                "parentalStatus",
+                "purpose",
+              ];
+              for (const key of requiredKeys) {
+                if (!this.applicant[key]) {
                   this.error = "Please fill in all required fields.";
                   return;
                 }
               }
-              this.error = "";
 
               if (this.applicant.age < 18) {
                 this.assessmentStage = "guidance";
               } else {
-                this.startAssessment();
+                this.startAssessment(); // Skip guidance if 18 or older
               }
             },
 
@@ -912,14 +1279,15 @@
                     role: "ai",
                     text: responseText.trim(),
                   });
-                  this.assessmentStage = "chat";
+                  this.assessmentStage = "chat"; // Move to chat *after* success
                 } else {
                   throw new Error("Initial message from AI was empty.");
                 }
               } catch (err) {
                 console.error("Error starting assessment:", err);
                 this.error =
-                  "Sorry, an error occurred while starting the chat. Please try again.";
+                  "Sorry, an error occurred while starting the chat. Please check your network or try again.";
+                this.assessmentStage = "landing"; // Go back to landing on failure
               } finally {
                 this.isLoading = false;
               }
@@ -942,6 +1310,8 @@
                   "Error writing document to Supabase: ",
                   error.message
                 );
+                // Note: We don't show this error to the user, as their part is "complete".
+                // This should be monitored via Supabase logs.
               }
             },
 
@@ -965,7 +1335,7 @@
               }));
 
               try {
-                const responseText = await this.callGeminiAPI(
+                const responseText = await this.callGemIPIWithRetry(
                   conversationHistory,
                   systemInstruction
                 );
@@ -991,11 +1361,30 @@
                 console.error("Error sending message:", err);
                 this.chatHistory.push({
                   role: "ai",
-                  text: "Sorry, I encountered an issue. Please try sending your message again.",
+                  text: "Sorry, my response to that was blocked. Could you please try rephrasing your last message?",
                 });
               } finally {
                 this.isLoading = false;
                 this.scrollToBottom();
+                this.$nextTick(() => this.$refs.chatInput.focus());
+              }
+            },
+
+            // Wrapper for API call with retry logic
+            async callGemIPIWithRetry(
+              history,
+              systemInstruction,
+              retries = 3,
+              delay = 1000
+            ) {
+              for (let i = 0; i < retries; i++) {
+                try {
+                  return await this.callGeminiAPI(history, systemInstruction);
+                } catch (error) {
+                  if (i === retries - 1) throw error; // Last retry failed, throw
+                  console.warn(`API call failed, retrying... (${i + 1})`);
+                  await new Promise((res) => setTimeout(res, delay * (i + 1))); // Exponential backoff
+                }
               }
             },
 
